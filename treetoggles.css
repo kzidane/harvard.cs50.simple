@@ -1,0 +1,43 @@
+/* preload icons */
+body:after {
+    content: url("@{image-path}/tree-toggle.png") url("@{image-path}/tree-toggle-active.png") url("@{image-path}/tree-toggle-dark.png") url("@{image-path}/tree-toggle-dark-active.png");
+    display:none;
+}
+
+/* light skin */
+.cs50-tree-toggle {
+    background-image: url("@{image-path}/tree-toggle.png");
+    background-size: auto 11px;
+    background-repeat: no-repeat;
+    left: 15px;
+    top: 12px;
+    z-index: 100;
+}
+
+.cs50-tree-toggle:hover {
+    filter: brightness(0.5);
+    -webkit-filter: brightness(0.5);
+}
+
+.cs50-tree-toggle.active {
+    background-image: url("@{image-path}/tree-toggle-active.png");
+}
+
+/* dark skin */
+.cs50-tree-toggle.dark {
+    background-image: url("@{image-path}/tree-toggle-dark.png");
+}
+
+.cs50-tree-toggle.dark:hover {
+    filter: brightness(1.5);
+    -webkit-filter:brightness(1.5);
+}
+
+.cs50-tree-toggle.dark.active {
+    background-image: url("@{image-path}/tree-toggle-dark-active.png");
+}
+
+/* shift menu button right */
+.cs50-tree-toggle-pane0 .tabmenubtn {
+    left: 40px !important;
+}

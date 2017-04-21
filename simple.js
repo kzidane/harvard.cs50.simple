@@ -58,7 +58,6 @@ define(function(require, exports, module) {
         var presenting = false;
         var terminalSound = null;
         var trailingLine = null;
-        var treeToggles = {};
 
         /**
          * Overrides the behavior of the "File/Open" menu item to open a file
@@ -302,126 +301,6 @@ define(function(require, exports, module) {
                 if (trailingLine && doc.getLine(length - 1) !== "")
                     doc.insertFullLines(length, [""]);
             }
-        }
-
-        /**
-         * Hides workspace button and adds small toggle to the left of code tabs
-         * and a menu toggle item under view.
-         */
-        function addTreeToggles() {
-            // get current skin initially
-            dark = settings.get("user/general/@skin").indexOf("dark") > -1;
-
-            // remember if tree is shown or hidden initially
-            var resetVisibility = tree.active ? tree.show : tree.hide;
-
-            // get middle column
-            var tabsParent = layout.findParent(tabManager);
-
-            // hide workspace from window menu
-            setMenuVisibility("Window/Workspace", false);
-
-            // remove workspace from left bar
-            panels.disablePanel("tree");
-
-            // reset tree visibility status (to prevent disablePanel from hiding tree)
-            resetVisibility("tree");
-
-            // toggle ID
-            treeToggles.ID = "treeToggle";
-
-            // create menu item
-            treeToggles.menuItem = new ui.item({
-                type: "check",
-                caption: "File Browser",
-                command: "toggletree"
-            });
-
-            // listen for pane creation
-            tabManager.on("paneCreate", function(e) {
-                var codePanes = tabManager.getPanes(tabsParent);
-
-                // ensure pane is a code pane (i.e., not console)
-                var pane = codePanes.find(function(p) {
-                    return p === e.pane;
-                });
-
-                if (!pane)
-                    return;
-
-                // create hidden toggle button
-                var button = ui.button({
-                    id: treeToggles.ID,
-                    "class": "cs50-simple-tree-toggle",
-                    command: "toggletree",
-                    skin: "c9-simple-btn",
-                    height: 16,
-                    width: 16,
-                    visible: false
-                });
-
-                // insert button into pane
-                pane.aml.appendChild(button);
-
-                // register button for destruction on pane destruction
-                pane.addElement(button);
-
-                // show button in first pane initially
-                if (codePanes.length === 1)
-                    showTreeToggle(codePanes[0]);
-
-                // handle when the pane that holds the button is destroyed
-                tabManager.on("paneDestroy", function(e) {
-                    // ensure pane is button-holder
-                    if (_.isObject(treeToggles.button) && e.pane !== treeToggles.button.pane)
-                        return;
-
-                    // get current code panes
-                    var codePanes = tabManager.getPanes(tabsParent);
-
-                    // ensure at least one pane left
-                    if (codePanes.length < 1)
-                        return;
-
-                    // find top-left pane
-                    var topLeftPane = codePanes[0];
-
-                    // remember boundaries of top-left pane
-                    var topLeftRect = topLeftPane.container.getBoundingClientRect();
-
-                    // iterate over the rest of the panes
-                    for (var i = 1; i < codePanes.length; i++) {
-                        // get boundary of current pane
-                        var rect = codePanes[i].container.getBoundingClientRect();
-
-                        // handle when pane is more top-left
-                        if (rect.left <= topLeftRect.left && rect.top <= topLeftRect.top) {
-                            topLeftPane = codePanes[i];
-                            topLeftRect = rect;
-                        }
-                    }
-
-                    // show tree toggle in top-left pane
-                    showTreeToggle(topLeftPane);
-                });
-            });
-
-            // add menu item to toggle tree (useful when toggle is hidden)
-            menus.addItemByPath("View/File Browser", treeToggles.menuItem, 200, plugin);
-
-            // sync tree toggles as tree is toggled or skin is changed
-            tree.once("draw", syncTreeToggles.bind(this, true));
-            tree.on("show", syncTreeToggles.bind(this, true));
-            tree.on("hide", syncTreeToggles);
-            settings.on("user/general/@skin", function(skin) {
-                dark = skin.indexOf("dark") > -1;
-                syncTreeToggles(tree.active);
-            });
-
-            // toggle visibility of tree toggle as tabs are shown or hidden
-            settings.on("user/tabs/@show", function(showing) {
-                showing ? show(treeToggles.button) : hide(treeToggles.button);
-            });
         }
 
         /**
@@ -671,63 +550,6 @@ define(function(require, exports, module) {
                 return true;
             }
             return false;
-        }
-
-        /**
-         * Shows the tree toggle of the passed pane only if tab buttons are
-         * visible
-         *
-         * @param {Pane} the pane to show its tree toggle
-         */
-        function showTreeToggle(pane) {
-            if (!_.isObject(pane))
-                return;
-
-            // show button in first pane
-            pane.getElement(treeToggles.ID, function(button) {
-                // make room for button
-                pane.aml.$ext.classList.add("cs50-simple-pane0");
-                pane.aml.$buttons.style.paddingLeft = "54px";
-
-                // show button only if tab buttons are visible
-                button.setAttribute("visible", settings.getBool("user/tabs/@show"));
-
-                // keep track of button
-                treeToggles.button = button;
-
-                // keep track of parent pane
-                treeToggles.button.pane = pane;
-
-                // sync button style with tree visibility
-                syncTreeToggles(tree.active);
-            });
-        }
-
-        /**
-         * Syncs tree toggle button and menu item with tree visibility state.
-         *
-         * @param {boolean} active whether to toggle the buttons on
-         */
-        function syncTreeToggles(active) {
-            if (treeToggles && treeToggles.button && treeToggles.menuItem) {
-                var style = "cs50-simple-tree-toggle";
-                if (dark)
-                    style += " dark";
-
-                if (active === true) {
-                    style += " active";
-
-                    // check menu item
-                    treeToggles.menuItem.setAttribute("checked", true);
-                }
-                else {
-                    // uncheck menu item
-                    treeToggles.menuItem.setAttribute("checked", false);
-                }
-
-                // update style of tree-toggle button
-                treeToggles.button.setAttribute("class", style);
-            }
         }
 
         /**
@@ -1293,12 +1115,11 @@ define(function(require, exports, module) {
 
             loaded = true;
 
-            ui.insertCss(require("text!./style.css"), options.staticPrefix, plugin);
+            ui.insertCss(require("text!./simple.css"), options.staticPrefix, plugin);
 
             // add the permanent changes
             addFileDialog();
             addToggle(plugin);
-            addTreeToggles();
             addTooltips();
             customizeC9Menu();
             hideElements();
@@ -1480,7 +1301,6 @@ define(function(require, exports, module) {
             presenting = false;
             terminalSound = null;
             trailingLine = null;
-            treeToggles = {};
             loaded = false;
         });
 

@@ -25,6 +25,8 @@
   "description": "Simplifies the CS50 IDE",
   "name": "harvard.cs50.simple",
   "plugins": {
-    "simple": {}
+    "simple": {},
+    "treetoggles": {},
+    "utils": {}
   }
 }

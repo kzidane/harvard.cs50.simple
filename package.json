@@ -26,6 +26,7 @@
   "name": "harvard.cs50.simple",
   "plugins": {
     "simple": {},
+    "templates": {},
     "treetoggles": {},
     "utils": {}
   }

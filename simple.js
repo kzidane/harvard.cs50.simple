@@ -5,7 +5,7 @@ define(function(require, exports, module) {
         "ace", "ace.status", "auth", "c9", "clipboard", "collab",
         "collab.workspace", "commands", "console", "dialog.file",
         "dialog.notification", "immediate", "info",  "keymaps", "navigate",
-        "outline", "layout", "login", "Menu", "menus", "newresource", "panels",
+        "outline", "layout", "login", "Menu", "menus", "panels",
         "Plugin", "preferences", "preview", "run.gui", "save", "settings",
         "tabbehavior", "tabManager", "terminal", "tooltip", "tree", "ui", "util"
     ];
@@ -21,7 +21,6 @@ define(function(require, exports, module) {
         var info = imports.info;
         var layout = imports.layout;
         var menus = imports.menus;
-        var newresource = imports.newresource;
         var notify = imports["dialog.notification"].show;
         // outline adds "Goto/Goto Symbol..."
         // listing it as dependency ensures item exists before simple is loaded
@@ -967,49 +966,6 @@ define(function(require, exports, module) {
         }
 
         /**
-         * Adds, and updates templates, and sorts template items and removes the
-         * " file" suffix from their captions
-         */
-        function updateTemplates() {
-            // add C template
-            newresource.addFileTemplate(require("text!./templates/c.templates"), plugin);
-
-            // overwrite default PHP template
-            menus.remove("File/New From Template/PHP file");
-            newresource.addFileTemplate(require("text!./templates/php.templates"), plugin);
-
-            // overwrite default Python template
-            menus.remove("File/New From Template/Python file");
-            newresource.addFileTemplate(require("text!./templates/python.templates"), plugin);
-
-            // remove JavaScript template item
-            menus.remove("File/New From Template/JavaScript file");
-
-            // sort template items and update their captions
-            var templates = menus.get("File/New From Template").menu;
-            var index = 100;
-            templates && templates.childNodes.map(function(item) {
-                return item.getAttribute("caption");
-            }).sort().forEach(function(caption) {
-                // form path of template's menu item
-                var path = "File/New From Template/" + caption;
-
-                // get the item
-                var item = menus.get(path).item;
-
-                // ensure item exists
-                if (item) {
-                    // move the item to its sorted location
-                    menus.addItemByPath(path, menus.get(path).item, index += 100, plugin);
-
-                    // remove the " file" suffix
-                    if (caption.slice(-5) === " file")
-                        setMenuCaption(item, caption.substring(0, caption.length - 5));
-                }
-            });
-        }
-
-        /**
          * Sets and updates the title of the browser tab.
          */
         function updateTitle(tab) {
@@ -1227,9 +1183,6 @@ define(function(require, exports, module) {
 
             // add Gravatar toggle online only
             info.getUser(addGravatarToggle);
-
-            // add and update templates
-            updateTemplates();
 
             // forcibly enable changes panel once
             if (!settings.getBool("project/cs50/simple/@scm-enabled")) {

@@ -3,13 +3,13 @@ define(function(require, exports, module) {
 
     main.consumes = [
         "ace", "ace.status", "auth", "c9", "clipboard", "collab",
-        "collab.workspace", "commands", "console", "dialog.file",
+        "collab.workspace", "commands", "console",
         "dialog.notification", "immediate", "info",  "keymaps", "navigate",
         "outline", "layout", "login", "Menu", "menus", "panels",
         "Plugin", "preferences", "preview", "run.gui", "save", "settings",
         "tabbehavior", "tabManager", "terminal", "tooltip", "tree", "ui", "util"
     ];
-    main.provides = ["harvard.cs50.simple"];
+    main.provides = ["cs50.simple"];
     return main;
 
     function main(options, imports, register) {
@@ -17,7 +17,6 @@ define(function(require, exports, module) {
         var c9 = imports.c9;
         var collab = imports.collab;
         var commands = imports.commands;
-        var fileDialog = imports["dialog.file"];
         var info = imports.info;
         var layout = imports.layout;
         var menus = imports.menus;
@@ -49,100 +48,12 @@ define(function(require, exports, module) {
 
         var authorInfoToggled = null;
         var avatar = null;
-        var dark = null;
         var divs = [];
         var foldAvailFuncs = {};
         var lessComfortable = true;
-        var openingFile = false;
         var presenting = false;
         var terminalSound = null;
         var trailingLine = null;
-
-        /**
-         * Overrides the behavior of the "File/Open" menu item to open a file
-         * dialog instead of the "Navigation" pane in less-comfy only.
-         */
-        function addFileDialog() {
-            // get the "File/Open" menu item
-            var openItem = menus.get("File/Open...").item;
-            if (!openItem)
-                return;
-
-            // add command that opens file dialog in less-comfy only
-            commands.addCommand({
-                name: "openFileDialog",
-                hint: "Opens file dialog for opening files",
-                bindKey: commands.commands.navigate.bindKey,
-                exec: function() {
-                    // override in less-comfy only
-                    if (!lessComfortable)
-                        return commands.exec("navigate");
-
-                    // wehther to customize file dialog
-                    openingFile = true;
-
-                    // show open file dialog
-                    fileDialog.show("Open file", null, function(path) {
-                        // open and activate file at path
-                        tabManager.openFile(path, true);
-
-                        // hide file dialog
-                        fileDialog.hide();
-                    }, null, {
-                        createFolderButton: false,
-                        showFilesCheckbox: false,
-                        chooseCaption: "Open"
-                    });
-                }
-            }, plugin);
-
-            // delete navigate's keyboard shortcut
-            delete commands.commands.navigate.bindKey;
-
-            /**
-             * Prevents selection of multiple files in "open file" dialog's tree
-             */
-            function disableMultiSelect() {
-                var selection = fileDialog.tree.selection;
-                var selectedNodes = selection.getSelectedNodes();
-
-                if (selectedNodes.length > 1)
-                    // select last selected node only
-                    selection.selectNode(selectedNodes[selectedNodes.length - 1], false);
-            }
-
-            // customize file dialog
-            fileDialog.on("show", function() {
-                // avoid customizing other file dialogs (e.g., save)
-                if (openingFile !== true)
-                    return;
-
-                // hide "Folder:" label and text field
-                var txtDirectory = fileDialog.getElement("txtDirectory");
-                hide(txtDirectory.previousSibling);
-                hide(txtDirectory);
-
-                // allow opening file by double-clicking it
-                fileDialog.tree.once("afterChoose", function() {
-                    fileDialog.getElement("btnChoose").dispatchEvent("click");
-                });
-
-                // disable multiple selection
-                fileDialog.tree.on("changeSelection", disableMultiSelect);
-            }, plugin);
-
-            // clean up to avoid affecting other file dialogs
-            fileDialog.on("hide", function() {
-                // reset openingFile
-                openingFile = false;
-
-                // remove changeSelection listener
-                fileDialog.tree.off("changeSelection", disableMultiSelect);
-            }, plugin);
-
-            // override "File/Open"'s behavior
-            openItem.setAttribute("command", "openFileDialog");
-        }
 
         /**
          * Hides avatar in offline IDE. Adds preference to toggle between
@@ -1073,8 +984,6 @@ define(function(require, exports, module) {
 
             ui.insertCss(require("text!./simple.css"), options.staticPrefix, plugin);
 
-            // add the permanent changes
-            addFileDialog();
             addToggle(plugin);
             addTooltips();
             customizeC9Menu();
@@ -1246,11 +1155,9 @@ define(function(require, exports, module) {
             toggleSimpleMode(false);
             authorInfoToggled = null;
             avatar = null;
-            dark = null;
             divs = [];
             foldAvailFuncs = {};
             lessComfortable = false;
-            openingFile = false;
             presenting = false;
             terminalSound = null;
             trailingLine = null;
@@ -1262,8 +1169,10 @@ define(function(require, exports, module) {
         /**
          * Left this empty since nobody else should be using our plugin
          **/
-        plugin.freezePublicAPI({ });
+        plugin.freezePublicAPI({
+            get lessComfortable() { return lessComfortable; }
+        });
 
-        register(null, { "harvard.cs50.simple" : plugin });
+        register(null, { "cs50.simple" : plugin });
     }
 });

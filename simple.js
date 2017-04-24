@@ -37,6 +37,7 @@ define(function(require, exports, module) {
         var workspace = imports["collab.workspace"];
 
         var plugin = new Plugin("CS50", main.consumes);
+        var emit = plugin.getEmitter();
 
         var SETTINGS_VER = 9;
 
@@ -214,77 +215,6 @@ define(function(require, exports, module) {
         }
 
         /**
-         * Customizes "Cloud9" menu for CS50 IDE
-         */
-        function customizeC9Menu() {
-            var dashboard = "Cloud9/Go To Your Dashboard";
-            if (c9.hosted) {
-                var dashboardItem = menus.get(dashboard).item;
-                if (dashboardItem) {
-                    // rename "Go To Your Dashboard" to "Dashboard"
-                    setMenuCaption(dashboardItem, "Dashboard");
-
-                    // move "Dashboard" above "Preferences"
-                    menus.addItemByPath(dashboard, dashboardItem, 299, plugin);
-                }
-
-                // simplify user's menu
-                info.getUser(function(err, user) {
-                    if (user && user.id) {
-                        var path = "user_" + user.id + "/";
-
-                        // move "Account" to CS50 IDE menu
-                        menus.addItemByPath("Cloud9/Account", menus.get(path + "Account").item, 298, plugin);
-
-                        // remove items from user's menu
-                        ["Dashboard", "Home", "Log out"].forEach(function(item) {
-                            menus.remove(path + item);
-                        });
-                    }
-                });
-
-                // CS50 IDE > Restart Workspace to CS50 IDE > Restart
-                setMenuCaption("Cloud9/Restart Workspace", "Restart");
-            }
-            else {
-                // remove "Dashboard" offline
-                menus.remove(dashboard);
-
-                // remove CS50 IDE > Log out offline
-                menus.remove("Cloud9/Quit Cloud9");
-            }
-
-            // add "About CS50"
-            menus.addItemByPath("Cloud9/About CS50", new ui.item({
-                caption: "About CS50",
-                onclick: function() {
-                    window.open("https://cs50.harvard.edu/", "_blank");
-                }
-            }), 0, plugin);
-
-            // add "What's New?"
-            menus.addItemByPath("Cloud9/What's New?", new ui.item({
-                caption: "What's New?",
-                onclick: function() {
-                    window.open("http://docs.cs50.net/ide/new.html", "_blank");
-                }
-            }), 1, plugin);
-
-            // add divider before "About Cloud9"
-            menus.addItemByPath("Cloud9/~", new ui.divider(), 50, plugin);
-
-            // add divider after "Preferences"
-            var div = new ui.divider();
-            menus.addItemByPath("Cloud9/~", div, 301, plugin);
-
-            // cache divider to show in more-comfy
-            divs.push(div);
-
-            // hide "Restart Cloud9"
-            setMenuVisibility("Cloud9/Restart Cloud9", false);
-        }
-
-        /**
          * Hides the given div by changing CSS
          *
          * @param {AMLElement} the AMLElement to hide
@@ -307,9 +237,6 @@ define(function(require, exports, module) {
             if (!c9.hosted) {
                 // remove panel button
                 collab.disable();
-
-                // hide Window > Collaborate
-                setMenuVisibility("Window/Collaborate", false);
             }
 
             // get parent of "Preview" and "Run" buttons
@@ -323,9 +250,6 @@ define(function(require, exports, module) {
 
             // hide the "Run" button
             hide(p.childNodes[2]);
-
-            // hide Run menu
-            setMenuVisibility("Run", false);
 
             // hide "Run" and "Preview" items from file browser's menu
             tree.on("menuUpdate", function(e) {
@@ -361,31 +285,6 @@ define(function(require, exports, module) {
                         hide(node);
                 });
             }
-        }
-
-        /**
-         * Sets or updates the caption of a menu or a menu item
-         *
-         * @param {(object|string)} item the menu item (or the path thereof)
-         * whose caption is to be set
-         * @param {string} caption the caption to be set
-         */
-        function setMenuCaption(item, caption) {
-            // get item by path
-            if (_.isString(item))
-                item = menus.get(item).item;
-
-            // ensure item is object
-            if (_.isObject(item))
-                item.setAttribute("caption", caption);
-        }
-
-        /**
-         * Sets visibility of menu item with specified path.
-         */
-        function setMenuVisibility(path, visible) {
-            var menu = menus.get(path).item;
-            visible ? show(menu) : hide(menu);
         }
 
         /**
@@ -524,102 +423,6 @@ define(function(require, exports, module) {
         }
 
         /**
-         * Toggles simplification of the menus at the top of Cloud 9
-         */
-        function toggleMenus(lessComfortable) {
-            // toggle visibility of each menu item
-            [
-                // CS50 IDE menu
-                "Cloud9/Open Your Project Settings",
-                "Cloud9/Open Your User Settings",
-                "Cloud9/Open Your Keymap",
-                "Cloud9/Open Your Init Script",
-                "Cloud9/Open Your Stylesheet",
-
-                // File menu
-                "File/Revert to Saved",
-                "File/Revert All to Saved",
-                "File/Mount FTP or SFTP server...",
-                "File/Line Endings",
-                "File/New Plugin",
-
-                // Edit menu
-                "Edit/Line/Move Line Up",
-                "Edit/Line/Move Line Down",
-                "Edit/Line/Copy Lines Up",
-                "Edit/Line/Copy Lines Down",
-                "Edit/Line/Remove Line",
-                "Edit/Line/Remove to Line End",
-                "Edit/Line/Remove to Line Start",
-                "Edit/Line/Split Line",
-                "Edit/Keyboard Mode",
-                "Edit/Selection",
-                "Edit/Text",
-                "Edit/Code Folding",
-                "Edit/Code Formatting",
-
-                // Find menu
-                "Find/Replace Next",
-                "Find/Replace Previous",
-                "Find/Replace All",
-
-                // View menu
-                "View/Editors",
-                "View/Syntax",
-                "View/Wrap Lines",
-                "View/Wrap To Print Margin",
-
-                // Goto menu
-                "Goto/Goto Anything...",
-                "Goto/Goto Symbol...",
-                "Goto/Goto Command...",
-                "Goto/Next Error",
-                "Goto/Previous Error",
-                "Goto/Word Right",
-                "Goto/Word Left",
-                "Goto/Scroll to Selection",
-
-                // Tools menu
-                "Tools",
-
-                // Window menu
-                "Window/New Immediate Window",
-                "Window/Installer...",
-                "Window/Navigate",
-                "Window/Commands",
-                "Window/Presets",
-                "Window/Changes",
-
-                // Support menu
-                "Support",
-
-                // extraneous templates
-                "File/New From Template/Text file",
-                "File/New From Template/CoffeeScript file",
-                "File/New From Template/XML file",
-                "File/New From Template/XQuery file",
-                "File/New From Template/SCSS file",
-                "File/New From Template/LESS file",
-                "File/New From Template/SVG file",
-                "File/New From Template/Ruby file",
-                "File/New From Template/OCaml file",
-                "File/New From Template/Clojure file",
-                "File/New From Template/Markdown",
-                "File/New From Template/Express file",
-                "File/New From Template/Node.js web server",
-            ].forEach(function(path) {
-                setMenuVisibility(path, !lessComfortable);
-            });
-
-            if (!lessComfortable) {
-                // show dividers that were automatically hidden in less-comfy
-                divs.forEach(function(div) {
-                    div.show();
-                });
-            }
-        }
-
-        /**
          * Toggles the button in top left that minimizes the menu bar
          */
         function toggleMiniButton(lessComfortable) {
@@ -696,7 +499,6 @@ define(function(require, exports, module) {
             }
 
             // toggle features
-            toggleMenus(lessComfortable);
             toggleMiniButton(lessComfortable);
             toggleSideTabs(lessComfortable);
             togglePlus(lessComfortable);
@@ -704,6 +506,8 @@ define(function(require, exports, module) {
 
             // make sure that the checkbox is correct
             menus.get("View/Less Comfortable").item.checked = lessComfortable;
+
+            emit("lessComfortable", lessComfortable);
         }
 
         /**
@@ -855,28 +659,6 @@ define(function(require, exports, module) {
         }
 
         /**
-         * Updates captions of some menus and menu items
-         */
-        function updateMenuCaptions() {
-            // map paths to captions
-            var captions = {
-                "Cloud9": "CS50 IDE",
-                "Cloud9/Quit Cloud9": "Log Out",
-                "Goto": "Go",
-                "Goto/Goto Anything...": "Anything...",
-                "Goto/Goto Line...": "Line...",
-                "Goto/Goto Symbol...": "Symbol...",
-                "Goto/Goto Command...": "Command...",
-                "Support/Check Cloud9 Status": "Cloud9 Status",
-                "Support/Read Documentation": "Cloud9 Documentation"
-            };
-
-            // update captions
-            for (var path in captions)
-                setMenuCaption(path, captions[path]);
-        }
-
-        /**
          * Sets and updates the title of the browser tab.
          */
         function updateTitle(tab) {
@@ -986,12 +768,10 @@ define(function(require, exports, module) {
 
             addToggle(plugin);
             addTooltips();
-            customizeC9Menu();
             hideElements();
             hideGearIcon();
             setTitleFromTabs();
             updateFontSize();
-            updateMenuCaptions();
             warnUnsaved();
 
             // get setting's version number
@@ -1170,7 +950,9 @@ define(function(require, exports, module) {
          * Left this empty since nobody else should be using our plugin
          **/
         plugin.freezePublicAPI({
-            get lessComfortable() { return lessComfortable; }
+            get lessComfortable() { return lessComfortable; },
+
+            _events: [ "lessComfortable" ]
         });
 
         register(null, { "cs50.simple" : plugin });

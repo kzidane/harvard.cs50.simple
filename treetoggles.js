@@ -68,7 +68,7 @@ define(function(require, exports, module) {
                 pane.addElement(button);
 
                 // show toggle in first pane
-                if (tabs.getPanes().length === 1)
+                if (panes.length === 1)
                     showToggle(panes[0]);
             }, plugin);
 

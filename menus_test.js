@@ -113,7 +113,8 @@ define(function(require, exports, module) {
 
             describe("hidden menus/items", function() {
                 it("should hide Run menu", function() {
-                    assert(menus.get("Run").menu.getAttribute("visible") === false);
+                    console.log(menus.get("Run"));
+                    assert(menus.get("Run").item.getAttribute("visible") === false);
                 });
             });
 

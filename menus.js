@@ -114,7 +114,7 @@ define(function() {
             // hide Run menu
             [
                 "Cloud9/Restart Cloud9",
-                //"Run"
+                "Run"
             ].forEach(function(path) {
                 showItem(path, false);
             });

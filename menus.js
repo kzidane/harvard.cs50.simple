@@ -94,9 +94,7 @@ define(function() {
                 // Support
                 "Support",
             ].forEach(function(path) {
-                getItem(path, function(item) {
-                    item.setAttribute("visible", !lessComfortable);
-                });
+                showItem(path, !lessComfortable);
             });
         }
 

@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-    main.consumes = ["cs50.utils", "Plugin", "layout", "menus", "panels", "settings", "tabManager", "tree", "ui"];
+    main.consumes = ["cs50.menus", "Plugin", "layout", "menus", "panels", "settings", "tabManager", "tree", "ui"];
     main.provides = ["cs50.treetoggles"];
     return main;
 
@@ -7,6 +7,7 @@ define(function(require, exports, module) {
         var Plugin = imports.Plugin;
         var layout = imports.layout;
         var menus = imports.menus;
+        var menus50 = imports["cs50.menus"];
         var panels = imports.panels;
         var settings = imports.settings;
         var tabs = imports.tabManager;
@@ -27,7 +28,7 @@ define(function(require, exports, module) {
             panels.disablePanel("tree", false, true);
 
             // hide Window > Workspace
-            utils.showMenuItem("Window/Workspace", false);
+            menus50.showItem("Window/Workspace", false);
 
             // add View > File Browser
             menuItem = new ui.item({

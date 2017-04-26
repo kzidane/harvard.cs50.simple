@@ -223,8 +223,12 @@ define(function() {
             simplifyMenus();
          });
 
-         plugin.freezePublicAPI({});
-         register(null, { "cs50.menus": plugin });
+        plugin.freezePublicAPI({
+            setItemCaption: setItemCaption,
+            showItem: showItem
+        });
+
+        register(null, { "cs50.menus": plugin });
     }
 
 });

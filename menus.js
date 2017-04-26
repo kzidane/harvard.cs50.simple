@@ -180,12 +180,11 @@ define(function() {
                         var root = "user_" + user.id + "/";
 
                         // move "Account" to CS50 IDE menu
-                        // TODO
                         moveItem("Cloud9/Account", root + "Account", 298);
 
                         // simplify user menu
                         ["Dashboard", "Home", "Log out"].forEach(function(item) {
-                            menus.remove(root + item);
+                            menus.showItem(root + item, false);
                         });
                     }
                 });
